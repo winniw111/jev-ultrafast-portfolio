@@ -1,5 +1,7 @@
 <img src="docs/banner.svg" alt="Jev Ultrafast · Browser Use × TypeSafe" width="100%" />
 
+[中文项目说明](README.zh-CN.md) · [Original English documentation](#jev-ultrafast-)
+
 # Jev Ultrafast ⚡
 
 > [!IMPORTANT]
@@ -7,6 +9,8 @@
 > **[Join the waitlist →](https://browser-use.com/ultrafast?utm_source=github&utm_medium=readme&utm_campaign=jev-ultrafast)**
 
 **A browser agent with a dynamic, indexed action space.**
+
+This portfolio fork adds Windows UTF-8 compatibility, an offline `jev-report` command, report tests, CI, and a Chinese project guide. The upstream core remains attributed to Browser Use under the MIT license.
 
 Give it one goal. [TypeSafe's Jev](https://docs.typesafe.ai/introduction) picks an operation and an element. A small LLM writes text only when the operation is `TYPE_TEXT`.
 
@@ -133,6 +137,13 @@ uv run pytest
 node --check jev_ultrafast/static/app.js
 node --check jev_ultrafast/snapshot.js
 uv build
+```
+
+Generate a report from an existing run or benchmark without API calls:
+
+```bash
+uv run jev-report docs/flights-measurement.json
+uv run jev-report docs/full-speed-measurement.json --format json
 ```
 
 Tests are offline. `uv run python scripts/check_guards.py` checks real controls in a local browser without model calls. Live examples and recording scripts make paid API calls. `scripts/record_flights.py <new-folder>` captures original browser timestamps; `scripts/render_demo.py <recording-folder>` renders that verified run at 1× and crops out the Google account strip. Credentials and raw traces stay ignored.
