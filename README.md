@@ -144,6 +144,7 @@ Generate a report from an existing run or benchmark without API calls:
 ```bash
 uv run jev-report docs/flights-measurement.json
 uv run jev-report docs/full-speed-measurement.json --format json
+uv run jev-report docs/flights-measurement.json --format html -o report.html
 ```
 
 Tests are offline. `uv run python scripts/check_guards.py` checks real controls in a local browser without model calls. Live examples and recording scripts make paid API calls. `scripts/record_flights.py <new-folder>` captures original browser timestamps; `scripts/render_demo.py <recording-folder>` renders that verified run at 1× and crops out the Google account strip. Credentials and raw traces stay ignored.

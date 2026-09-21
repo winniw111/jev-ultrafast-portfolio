@@ -13,7 +13,7 @@
 在此基础上，我完成了以下可独立核验的改进：
 
 - 修复中文 Windows 环境下按 GBK 读取 UTF-8 JavaScript 文件导致程序无法启动的问题；
-- 新增 `jev-report` 离线分析命令，可将运行轨迹或多轮基准数据汇总为 Markdown/JSON；
+- 新增 `jev-report` 离线分析命令，可将运行轨迹或多轮基准数据汇总为 Markdown、JSON 或自包含 HTML 可视化页面；
 - 增加报告模块的单元测试，当前项目共有 34 项离线测试；
 - 增加 GitHub Actions，自动执行 Python 检查、离线测试、JavaScript 语法检查和打包；
 - 补充中文说明、Windows 运行方式与适合面试讲解的架构说明。
@@ -77,9 +77,10 @@ uv build
 uv run jev-report docs/flights-measurement.json
 uv run jev-report docs/full-speed-measurement.json --format json
 uv run jev-report artifacts/my-run/state.json -o artifacts/my-run/report.md
+uv run jev-report docs/flights-measurement.json --format html -o report.html
 ```
 
-报告会给出任务耗时、浏览器动作数、决策请求数、中位决策延迟、文本模型调用成本、操作分布和独立校验结果。示例见 [docs/sample-report.md](docs/sample-report.md)。
+报告会给出任务耗时、浏览器动作数、决策请求数、中位决策延迟、文本模型调用成本、操作分布和独立校验结果。HTML 版本不加载远程字体、脚本或样式，双击文件即可离线展示。示例见 [docs/sample-report.md](docs/sample-report.md) 和 [docs/sample-report.html](docs/sample-report.html)。
 
 ## 面试时可以重点讲什么
 
@@ -96,7 +97,7 @@ uv run jev-report artifacts/my-run/state.json -o artifacts/my-run/report.md
 ## 后续计划
 
 - 增加无需密钥的本地回放模式；
-- 扩展轨迹报告为可交互 HTML 页面；
+- 为 HTML 报告增加动作时间线和筛选交互；
 - 增加更多网站与失败场景的回归用例；
 - 对比不同模型在成功率、延迟和成本上的表现。
 

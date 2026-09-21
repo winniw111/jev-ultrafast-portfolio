@@ -2,7 +2,7 @@
 
 import json
 
-from jev_ultrafast.report import main, summarize, to_markdown
+from jev_ultrafast.report import main, summarize, to_html, to_markdown
 
 
 def test_summarize_live_state():
@@ -56,6 +56,20 @@ def test_summarize_benchmark():
     assert result["median_actions"] == 2.0
 
 
+def test_compact_measurement_uses_browser_action_count():
+    result = summarize(
+        {
+            "elapsed_ms": 7073,
+            "browser_actions": 11,
+            "decision_requests": 17,
+            "verification": {"passed": True},
+        }
+    )
+
+    assert result["actions"] == 11
+    assert result["decision_requests"] == 17
+
+
 def test_markdown_and_cli_output(tmp_path):
     source = tmp_path / "state.json"
     output = tmp_path / "report.md"
@@ -71,3 +85,34 @@ def test_markdown_and_cli_output(tmp_path):
     assert "## Operations" in to_markdown(
         summarize(json.loads(source.read_text(encoding="utf-8"))), source.name
     )
+
+
+def test_html_report_is_self_contained_and_escapes_input(tmp_path):
+    source = tmp_path / "unsafe.json"
+    output = tmp_path / "report.html"
+    source.write_text(
+        json.dumps(
+            {
+                "task": "Find <script>alert('x')</script>",
+                "elapsed_ms": 1234,
+                "actions": [{"operation": "CLICK"}, {"operation": "CLICK"}],
+                "verification": {"passed": True},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert main([str(source), "--format", "html", "--output", str(output)]) == 0
+    report = output.read_text(encoding="utf-8")
+    assert report.startswith("<!doctype html>")
+    assert "&lt;script&gt;" in report and "<script>alert" not in report
+    assert "Operation mix" in report
+    assert "http://" not in report and "https://" not in report
+
+
+def test_html_benchmark_contains_run_comparison():
+    result = summarize({"runs": [{"elapsed_ms": 100}, {"elapsed_ms": 200}]})
+    report = to_html(result, "benchmark.json")
+
+    assert "Run comparison" in report
+    assert "Run 1" in report and "Run 2" in report
