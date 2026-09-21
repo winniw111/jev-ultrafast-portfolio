@@ -34,6 +34,35 @@ def test_summarize_live_state():
         "text_calls": 1,
         "text_cost_usd": 0.00003,
         "operations": {"CLICK": 1, "TYPE_TEXT": 1, "WAIT": 1},
+        "timeline": [
+            {
+                "step": 1,
+                "operation": "TYPE_TEXT",
+                "action": "Step 1",
+                "elapsed_ms": None,
+                "latency_ms": None,
+                "typed": False,
+                "page_changed": None,
+            },
+            {
+                "step": 2,
+                "operation": "CLICK",
+                "action": "Step 2",
+                "elapsed_ms": None,
+                "latency_ms": None,
+                "typed": False,
+                "page_changed": None,
+            },
+            {
+                "step": 3,
+                "operation": "WAIT",
+                "action": "Step 3",
+                "elapsed_ms": None,
+                "latency_ms": None,
+                "typed": False,
+                "page_changed": None,
+            },
+        ],
     }
 
 
@@ -107,6 +136,7 @@ def test_html_report_is_self_contained_and_escapes_input(tmp_path):
     assert report.startswith("<!doctype html>")
     assert "&lt;script&gt;" in report and "<script>alert" not in report
     assert "Operation mix" in report
+    assert "Action timeline" in report and "▶ Replay" in report
     assert "http://" not in report and "https://" not in report
 
 
@@ -116,3 +146,25 @@ def test_html_benchmark_contains_run_comparison():
 
     assert "Run comparison" in report
     assert "Run 1" in report and "Run 2" in report
+
+
+def test_timeline_hides_typed_values_by_default():
+    result = summarize(
+        {
+            "history": [
+                {
+                    "operation": "TYPE_TEXT",
+                    "action": "Password",
+                    "text": "never-include-this-secret",
+                    "elapsed_ms": 250,
+                    "latency_ms": 100,
+                }
+            ]
+        }
+    )
+    report = to_html(result)
+
+    assert result["timeline"][0]["typed"] is True
+    assert "typed value hidden" in report
+    assert "never-include-this-secret" not in json.dumps(result)
+    assert "never-include-this-secret" not in report

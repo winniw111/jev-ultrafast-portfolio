@@ -31,5 +31,6 @@ jobs:
         run: |
           node --check jev_ultrafast/static/app.js
           node --check jev_ultrafast/snapshot.js
+          node --check jev_ultrafast/report_interactions.js
       - name: Build package
         run: uv build

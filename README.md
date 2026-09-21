@@ -12,6 +12,8 @@
 
 This portfolio fork adds Windows UTF-8 compatibility, an offline `jev-report` command, report tests, CI, and a Chinese project guide. The upstream core remains attributed to Browser Use under the MIT license.
 
+HTML reports include operation filters and an offline action replay. Typed values are hidden by default so exported traces do not copy form contents into the report.
+
 Give it one goal. [TypeSafe's Jev](https://docs.typesafe.ai/introduction) picks an operation and an element. A small LLM writes text only when the operation is `TYPE_TEXT`.
 
 **Zürich → London on Google Flights in 7.1 seconds.** One natural-language goal, actual text generation, and loading waits included.
@@ -136,7 +138,9 @@ uv run ruff check .
 uv run pytest
 node --check jev_ultrafast/static/app.js
 node --check jev_ultrafast/snapshot.js
+node --check jev_ultrafast/report_interactions.js
 uv build
+uv run python scripts/check_report.py
 ```
 
 Generate a report from an existing run or benchmark without API calls:

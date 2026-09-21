@@ -10,6 +10,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+REPORT_SCRIPT = Path(__file__).with_name("report_interactions.js").read_text(encoding="utf-8")
+
 
 def _median(values: list[float]) -> float | None:
     return round(statistics.median(values), 2) if values else None
@@ -20,6 +22,26 @@ def _passed(payload: dict[str, Any]) -> bool | None:
     if isinstance(verification, dict) and isinstance(verification.get("passed"), bool):
         return verification["passed"]
     return None
+
+
+def _timeline(actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    timeline = []
+    for index, item in enumerate(actions, start=1):
+        operation = str(item.get("operation") or item.get("kind") or "unknown").upper()
+        label = item.get("action") or item.get("label") or f"Step {index}"
+        page_changed = item.get("page_changed")
+        timeline.append(
+            {
+                "step": item.get("step") if isinstance(item.get("step"), int) else index,
+                "operation": operation,
+                "action": str(label),
+                "elapsed_ms": item.get("elapsed_ms") if isinstance(item.get("elapsed_ms"), (int, float)) else None,
+                "latency_ms": item.get("latency_ms") if isinstance(item.get("latency_ms"), (int, float)) else None,
+                "typed": bool(item.get("text")),
+                "page_changed": page_changed if isinstance(page_changed, bool) else None,
+            }
+        )
+    return timeline
 
 
 def summarize_run(payload: dict[str, Any]) -> dict[str, Any]:
@@ -61,6 +83,7 @@ def summarize_run(payload: dict[str, Any]) -> dict[str, Any]:
         "text_calls": len(text_calls),
         "text_cost_usd": round(text_cost, 8),
         "operations": dict(sorted(operations.items())),
+        "timeline": _timeline(actions),
     }
 
 
@@ -148,6 +171,44 @@ def _verification_badge(value: bool | None) -> str:
     return f'<span class="badge {css_class}">{label}</span>'
 
 
+def _timeline_html(summary: dict[str, Any]) -> str:
+    timeline = summary["timeline"]
+    if not timeline:
+        return ""
+    operations = sorted({item["operation"] for item in timeline})
+    filters = ['<button class="filter active" data-filter="ALL" type="button">All</button>']
+    filters.extend(
+        f'<button class="filter" data-filter="{html.escape(operation, quote=True)}" type="button">'
+        f"{html.escape(operation)}</button>"
+        for operation in operations
+    )
+    rows = []
+    for item in timeline:
+        elapsed = f"{item['elapsed_ms'] / 1000:.2f} s" if item["elapsed_ms"] is not None else "time n/a"
+        latency = f"{item['latency_ms']} ms decision" if item["latency_ms"] is not None else "latency n/a"
+        privacy = '<span class="privacy">typed value hidden</span>' if item["typed"] else ""
+        if item["page_changed"] is True:
+            changed = '<span class="changed">page changed</span>'
+        elif item["page_changed"] is False:
+            changed = '<span class="unchanged">page unchanged</span>'
+        else:
+            changed = ""
+        rows.append(
+            f'<article class="trace-step" data-operation="{html.escape(item["operation"], quote=True)}">'
+            f'<span class="trace-number">{item["step"]}</span><div class="trace-main">'
+            f'<div><span class="operation">{html.escape(item["operation"])}</span>{privacy}{changed}</div>'
+            f'<strong>{html.escape(item["action"])}</strong><span class="trace-meta">{elapsed} · {latency}</span>'
+            "</div></article>"
+        )
+    return (
+        '<section class="timeline"><div class="section-title"><div><h2>Action timeline</h2>'
+        '<span>Replay observed actions without browser or API access</span></div>'
+        '<button id="replay" class="replay" type="button">▶ Replay</button></div>'
+        f'<div class="filters" aria-label="Filter actions">{"".join(filters)}</div>'
+        f'<div class="trace-list">{"".join(rows)}</div></section>'
+    )
+
+
 def _run_html(summary: dict[str, Any]) -> tuple[str, str]:
     elapsed = summary["elapsed_ms"]
     elapsed_value = f"{elapsed / 1000:.2f} s" if isinstance(elapsed, (int, float)) else "n/a"
@@ -174,7 +235,7 @@ def _run_html(summary: dict[str, Any]) -> tuple[str, str]:
         '<section><div class="section-title"><h2>Operation mix</h2><span>Observed browser mutations</span></div>'
         f'<div class="bars">{bars or "<p>No actions recorded.</p>"}</div></section>'
     )
-    return cards, section
+    return cards, section + _timeline_html(summary)
 
 
 def _benchmark_html(summary: dict[str, Any]) -> tuple[str, str]:
@@ -266,6 +327,38 @@ th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spa
 .inline-bar { display: inline-block; width: 130px; margin-right: 12px; vertical-align: middle; }
 .inline-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--blue), var(--cyan)); }
 footer { color: var(--muted); font-size: 12px; margin-top: 22px; text-align: right; }
+.timeline { margin-top: 18px; }
+.timeline .section-title { align-items: center; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+.filter, .replay {
+  color: #bdd0e4; background: #13283d; border: 1px solid var(--line); border-radius: 999px;
+  padding: 7px 12px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.filter:hover, .filter.active, .replay:hover { color: #07111f; background: var(--cyan); border-color: var(--cyan); }
+.trace-list { display: grid; gap: 10px; }
+.trace-step {
+  display: grid; grid-template-columns: 42px 1fr; gap: 14px; align-items: center; padding: 15px;
+  border: 1px solid var(--line); border-radius: 15px; background: rgba(7,17,31,.45); transition: .25s ease;
+}
+.trace-step[hidden] { display: none; }
+.trace-step.pending { opacity: .24; transform: translateX(6px); }
+.trace-step.current { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan); }
+.trace-step.played { opacity: .72; }
+.trace-number {
+  display: grid; place-items: center; width: 36px; height: 36px; color: var(--cyan); background: #102a3d;
+  border-radius: 12px; font-weight: 800;
+}
+.trace-main { display: grid; gap: 4px; min-width: 0; }
+.trace-main > div { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+.trace-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.operation, .privacy, .changed, .unchanged {
+  padding: 2px 7px; border-radius: 999px; font: 10px ui-monospace, monospace; text-transform: uppercase;
+}
+.operation { color: #93c5fd; background: #132c4b; }
+.privacy { color: #fcd34d; background: #3b2d0f; }
+.changed { color: var(--green); background: #0b2d28; }
+.unchanged { color: var(--muted); background: #172536; }
+.trace-meta { color: var(--muted); font-size: 11px; }
 @media(max-width: 720px) {
   main { padding-top: 36px; } .grid { grid-template-columns: repeat(2, 1fr); }
   .topline, .section-title { align-items: flex-start; flex-direction: column; }
@@ -273,6 +366,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 22px; text-align: rig
 }
 @media(max-width: 450px) { .grid { grid-template-columns: 1fr; } .metric { min-height: 112px; } }
 """
+    script = f"<script>\n{REPORT_SCRIPT}\n</script>"
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Jev report · {source_label}</title><style>{styles}</style></head>
@@ -280,7 +374,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 22px; text-align: rig
 <span class="source">{source_label}</span></div>
 <h1>Browser agent<br>execution report</h1><p class="lede">{task}</p>{badge}
 <div class="grid">{cards}</div>{detail}
-<footer>Generated offline by jev-report · no API calls</footer></main></body></html>
+<footer>Generated offline by jev-report · no API calls</footer></main>{script}</body></html>
 """
 
 

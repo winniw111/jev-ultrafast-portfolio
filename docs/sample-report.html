@@ -49,6 +49,38 @@ th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spa
 .inline-bar { display: inline-block; width: 130px; margin-right: 12px; vertical-align: middle; }
 .inline-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--blue), var(--cyan)); }
 footer { color: var(--muted); font-size: 12px; margin-top: 22px; text-align: right; }
+.timeline { margin-top: 18px; }
+.timeline .section-title { align-items: center; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+.filter, .replay {
+  color: #bdd0e4; background: #13283d; border: 1px solid var(--line); border-radius: 999px;
+  padding: 7px 12px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.filter:hover, .filter.active, .replay:hover { color: #07111f; background: var(--cyan); border-color: var(--cyan); }
+.trace-list { display: grid; gap: 10px; }
+.trace-step {
+  display: grid; grid-template-columns: 42px 1fr; gap: 14px; align-items: center; padding: 15px;
+  border: 1px solid var(--line); border-radius: 15px; background: rgba(7,17,31,.45); transition: .25s ease;
+}
+.trace-step[hidden] { display: none; }
+.trace-step.pending { opacity: .24; transform: translateX(6px); }
+.trace-step.current { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan); }
+.trace-step.played { opacity: .72; }
+.trace-number {
+  display: grid; place-items: center; width: 36px; height: 36px; color: var(--cyan); background: #102a3d;
+  border-radius: 12px; font-weight: 800;
+}
+.trace-main { display: grid; gap: 4px; min-width: 0; }
+.trace-main > div { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+.trace-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.operation, .privacy, .changed, .unchanged {
+  padding: 2px 7px; border-radius: 999px; font: 10px ui-monospace, monospace; text-transform: uppercase;
+}
+.operation { color: #93c5fd; background: #132c4b; }
+.privacy { color: #fcd34d; background: #3b2d0f; }
+.changed { color: var(--green); background: #0b2d28; }
+.unchanged { color: var(--muted); background: #172536; }
+.trace-meta { color: var(--muted); font-size: 11px; }
 @media(max-width: 720px) {
   main { padding-top: 36px; } .grid { grid-template-columns: repeat(2, 1fr); }
   .topline, .section-title { align-items: flex-start; flex-direction: column; }
@@ -59,5 +91,54 @@ footer { color: var(--muted); font-size: 12px; margin-top: 22px; text-align: rig
 <body><main><div class="topline"><span class="eyebrow">Jev · Run intelligence</span>
 <span class="source">flights-measurement.json</span></div>
 <h1>Browser agent<br>execution report</h1><p class="lede">Find one-way flights from Zurich to London on September 20, 2026, for one adult in economy. Stop when matching flight options are visible. Do not select or book a flight.</p><span class="badge success">Verified</span>
-<div class="grid"><article class="metric"><span class="label">Elapsed</span><strong>7.07 s</strong><span class="detail">decision start to completion</span></article><article class="metric"><span class="label">Browser actions</span><strong>11</strong></article><article class="metric"><span class="label">Decision requests</span><strong>17</strong></article><article class="metric"><span class="label">Median decision</span><strong>178 ms</strong></article><article class="metric"><span class="label">Text calls</span><strong>2</strong></article><article class="metric"><span class="label">Text cost</span><strong>$0.00006272</strong></article></div><section><div class="section-title"><h2>Operation mix</h2><span>Observed browser mutations</span></div><div class="bars"><div class="bar-row"><span>CLICK</span><div class="bar-track"><div class="bar" style="width:100.0%"></div></div><strong>8</strong></div><div class="bar-row"><span>TYPE_TEXT</span><div class="bar-track"><div class="bar" style="width:25.0%"></div></div><strong>2</strong></div><div class="bar-row"><span>WAIT</span><div class="bar-track"><div class="bar" style="width:12.5%"></div></div><strong>1</strong></div></div></section>
-<footer>Generated offline by jev-report · no API calls</footer></main></body></html>
+<div class="grid"><article class="metric"><span class="label">Elapsed</span><strong>7.07 s</strong><span class="detail">decision start to completion</span></article><article class="metric"><span class="label">Browser actions</span><strong>11</strong></article><article class="metric"><span class="label">Decision requests</span><strong>17</strong></article><article class="metric"><span class="label">Median decision</span><strong>178 ms</strong></article><article class="metric"><span class="label">Text calls</span><strong>2</strong></article><article class="metric"><span class="label">Text cost</span><strong>$0.00006272</strong></article></div><section><div class="section-title"><h2>Operation mix</h2><span>Observed browser mutations</span></div><div class="bars"><div class="bar-row"><span>CLICK</span><div class="bar-track"><div class="bar" style="width:100.0%"></div></div><strong>8</strong></div><div class="bar-row"><span>TYPE_TEXT</span><div class="bar-track"><div class="bar" style="width:25.0%"></div></div><strong>2</strong></div><div class="bar-row"><span>WAIT</span><div class="bar-track"><div class="bar" style="width:12.5%"></div></div><strong>1</strong></div></div></section><section class="timeline"><div class="section-title"><div><h2>Action timeline</h2><span>Replay observed actions without browser or API access</span></div><button id="replay" class="replay" type="button">▶ Replay</button></div><div class="filters" aria-label="Filter actions"><button class="filter active" data-filter="ALL" type="button">All</button><button class="filter" data-filter="CLICK" type="button">CLICK</button><button class="filter" data-filter="TYPE_TEXT" type="button">TYPE_TEXT</button><button class="filter" data-filter="WAIT" type="button">WAIT</button></div><div class="trace-list"><article class="trace-step" data-operation="CLICK"><span class="trace-number">1</span><div class="trace-main"><div><span class="operation">CLICK</span></div><strong>Change ticket type. Round trip</strong><span class="trace-meta">0.37 s · 299 ms decision</span></div></article><article class="trace-step" data-operation="CLICK"><span class="trace-number">2</span><div class="trace-main"><div><span class="operation">CLICK</span></div><strong>One way</strong><span class="trace-meta">0.72 s · 217 ms decision</span></div></article><article class="trace-step" data-operation="TYPE_TEXT"><span class="trace-number">3</span><div class="trace-main"><div><span class="operation">TYPE_TEXT</span><span class="privacy">typed value hidden</span></div><strong>Where from?</strong><span class="trace-meta">1.77 s · 126 ms decision</span></div></article><article class="trace-step" data-operation="CLICK"><span class="trace-number">4</span><div class="trace-main"><div><span class="operation">CLICK</span></div><strong>Zürich, Switzerland</strong><span class="trace-meta">1.96 s · 121 ms decision</span></div></article><article class="trace-step" data-operation="TYPE_TEXT"><span class="trace-number">5</span><div class="trace-main"><div><span class="operation">TYPE_TEXT</span><span class="privacy">typed value hidden</span></div><strong>Where to? </strong><span class="trace-meta">2.88 s · 120 ms decision</span></div></article><article class="trace-step" data-operation="CLICK"><span class="trace-number">6</span><div class="trace-main"><div><span class="operation">CLICK</span></div><strong>London, United Kingdom</strong><span class="trace-meta">3.08 s · 143 ms decision</span></div></article><article class="trace-step" data-operation="CLICK"><span class="trace-number">7</span><div class="trace-main"><div><span class="operation">CLICK</span></div><strong>Open Departure</strong><span class="trace-meta">3.52 s · 112 ms decision</span></div></article><article class="trace-step" data-operation="CLICK"><span class="trace-number">8</span><div class="trace-main"><div><span class="operation">CLICK</span></div><strong>Sunday, September 20, 2026</strong><span class="trace-meta">3.81 s · 203 ms decision</span></div></article><article class="trace-step" data-operation="CLICK"><span class="trace-number">9</span><div class="trace-main"><div><span class="operation">CLICK</span></div><strong>Done. Search for one-way flights, departing on September 20, 2026</strong><span class="trace-meta">4.14 s · 247 ms decision</span></div></article><article class="trace-step" data-operation="CLICK"><span class="trace-number">10</span><div class="trace-main"><div><span class="operation">CLICK</span></div><strong>Search</strong><span class="trace-meta">5.32 s · 178 ms decision</span></div></article><article class="trace-step" data-operation="WAIT"><span class="trace-number">11</span><div class="trace-main"><div><span class="operation">WAIT</span></div><strong>Wait for the page to update</strong><span class="trace-meta">5.59 s · 141 ms decision</span></div></article></div></section>
+<footer>Generated offline by jev-report · no API calls</footer></main><script>
+(() => {
+  const rows = [...document.querySelectorAll('.trace-step')];
+  const filters = [...document.querySelectorAll('.filter')];
+  const replay = document.querySelector('#replay');
+  if (!rows.length || !replay) return;
+
+  let timer = null;
+  const reset = () => {
+    if (timer) clearInterval(timer);
+    timer = null;
+    replay.textContent = '▶ Replay';
+    rows.forEach(row => row.classList.remove('pending', 'current', 'played'));
+  };
+
+  filters.forEach(button => button.addEventListener('click', () => {
+    reset();
+    filters.forEach(item => item.classList.toggle('active', item === button));
+    rows.forEach(row => {
+      row.hidden = button.dataset.filter !== 'ALL' && row.dataset.operation !== button.dataset.filter;
+    });
+  }));
+
+  replay.addEventListener('click', () => {
+    if (timer) {
+      reset();
+      return;
+    }
+    const visible = rows.filter(row => !row.hidden);
+    let index = 0;
+    rows.forEach(row => row.classList.remove('played', 'current'));
+    visible.forEach(row => row.classList.add('pending'));
+    replay.textContent = '■ Stop';
+
+    const tick = () => {
+      if (index > 0) visible[index - 1].classList.replace('current', 'played');
+      if (index >= visible.length) {
+        reset();
+        return;
+      }
+      visible[index].classList.replace('pending', 'current');
+      visible[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      index += 1;
+    };
+    tick();
+    timer = setInterval(tick, 700);
+  });
+})();
+
+</script></body></html>

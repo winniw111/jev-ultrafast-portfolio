@@ -14,6 +14,7 @@
 
 - 修复中文 Windows 环境下按 GBK 读取 UTF-8 JavaScript 文件导致程序无法启动的问题；
 - 新增 `jev-report` 离线分析命令，可将运行轨迹或多轮基准数据汇总为 Markdown、JSON 或自包含 HTML 可视化页面；
+- HTML 报告支持动作时间线、操作类型筛选和自动回放，并默认隐藏输入框中的真实文本；
 - 增加报告模块的单元测试，当前项目共有 34 项离线测试；
 - 增加 GitHub Actions，自动执行 Python 检查、离线测试、JavaScript 语法检查和打包；
 - 补充中文说明、Windows 运行方式与适合面试讲解的架构说明。
@@ -69,6 +70,8 @@ uv run jev
 uv run ruff check .
 uv run pytest
 uv build
+# 可选浏览器交互检查，需先完成 browser-harness --doctor
+uv run python scripts/check_report.py
 ```
 
 也可以对仓库内已有实验数据生成报告，不需要密钥或浏览器：
@@ -80,7 +83,7 @@ uv run jev-report artifacts/my-run/state.json -o artifacts/my-run/report.md
 uv run jev-report docs/flights-measurement.json --format html -o report.html
 ```
 
-报告会给出任务耗时、浏览器动作数、决策请求数、中位决策延迟、文本模型调用成本、操作分布和独立校验结果。HTML 版本不加载远程字体、脚本或样式，双击文件即可离线展示。示例见 [docs/sample-report.md](docs/sample-report.md) 和 [docs/sample-report.html](docs/sample-report.html)。
+报告会给出任务耗时、浏览器动作数、决策请求数、中位决策延迟、文本模型调用成本、操作分布和独立校验结果。HTML 版本不加载远程字体、脚本或样式，双击文件即可筛选动作并回放执行轨迹。为减少轨迹外发时的数据泄露风险，报告只标记发生过文本输入，不写入真实输入值。示例见 [docs/sample-report.md](docs/sample-report.md) 和 [docs/sample-report.html](docs/sample-report.html)。
 
 ## 面试时可以重点讲什么
 
@@ -97,7 +100,7 @@ uv run jev-report docs/flights-measurement.json --format html -o report.html
 ## 后续计划
 
 - 增加无需密钥的本地回放模式；
-- 为 HTML 报告增加动作时间线和筛选交互；
+- 支持将截图帧与动作时间线同步回放；
 - 增加更多网站与失败场景的回归用例；
 - 对比不同模型在成功率、延迟和成本上的表现。
 
